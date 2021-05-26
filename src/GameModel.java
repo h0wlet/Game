@@ -88,10 +88,7 @@ class GameModel extends JPanel implements Runnable{
         }
 
 
-        if(ball.y <= 0) {
-            ball.setYDirection(-ball.speedY);
-        }
-        if(ball.y >= HEIGHT-BALL_DIAMETER) {
+         if((ball.y <= 0) || (ball.y >= HEIGHT-BALL_DIAMETER)) {
             ball.setYDirection(-ball.speedY);
         }
 
