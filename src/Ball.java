@@ -8,15 +8,15 @@ public class Ball extends Rectangle{
     int speedY;
 
     Ball(int x, int y, int width, int height){
-        super(x,y,width,height);
+        super(x, y, width, height);
         random = new Random();
-        int randXDirection = random.nextInt(1);
+        int randXDirection = random.nextInt(2);
         if(randXDirection == 0){
             randXDirection--;
         }
         setXDirection(randXDirection*2);
 
-        int randYDirection = random.nextInt(1);
+        int randYDirection = random.nextInt(2);
         if(randYDirection == 0) {
             randYDirection--;
         }
@@ -35,12 +35,12 @@ public class Ball extends Rectangle{
         y += speedY;
     }
 
-    public void draw(Graphics g) {
-        try {
-            g.setColor(Color.WHITE);
-            g.fillOval(x, y, height, width);
-        } catch (Exception ex){
-            ex.printStackTrace();
-        }
+    public int getXCoordinate(){
+        return x;
     }
+
+    public int getYCoordinate(){
+        return y;
+    }
+
 }

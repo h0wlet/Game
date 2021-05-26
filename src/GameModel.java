@@ -1,67 +1,53 @@
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import javax.swing.*;
 
-class GameModel extends JPanel implements Runnable{
+import java.awt.event.KeyEvent;
+import java.util.*;
+
+class GameModel implements Runnable{
 
     static final int WIDTH = 800;
     static final int HEIGHT = 400;
-    static final Dimension SCREEN_SIZE = new Dimension(WIDTH,HEIGHT);
     static final int BALL_DIAMETER = 20;
     static final int PADDLE_WIDTH = 25;
     static final int PADDLE_HEIGHT = 100;
 
     Thread gameThread;
-    Image image;
-    Graphics graphics;
-    Random random;
     Paddle paddle1;
     Paddle paddle2;
     Ball ball;
     Score score;
 
+    ArrayList<GameModelObserver> observers = new ArrayList<>();
+
     GameModel(){
         newPaddles();
         newBall();
         score = new Score(WIDTH,HEIGHT);
-        setFocusable(true);
-        addKeyListener(new KeyListener() {
-            public void keyPressed(KeyEvent e) {
-                paddle1.keyPressed(e);
-                paddle2.keyPressed(e);
-            }
-
-            public void keyReleased(KeyEvent e) {
-                paddle1.keyReleased(e);
-                paddle2.keyReleased(e);
-            }
-
-            public void keyTyped(KeyEvent e) {}
-
-        });
-
-        setPreferredSize(SCREEN_SIZE);
 
         gameThread = new Thread(this);
         gameThread.start();
     }
 
     public void newBall() {
-        random = new Random();
         ball = new Ball((WIDTH-BALL_DIAMETER)/2,(HEIGHT-BALL_DIAMETER)/2,BALL_DIAMETER,BALL_DIAMETER);
     }
 
     public void newPaddles() {
-        paddle1 = new Paddle(0,(HEIGHT-PADDLE_HEIGHT)/2,PADDLE_WIDTH,PADDLE_HEIGHT,1);
-        paddle2 = new Paddle(WIDTH-PADDLE_WIDTH,(HEIGHT-PADDLE_HEIGHT)/2,PADDLE_WIDTH,PADDLE_HEIGHT,2);
+        paddle1 = new Paddle(0,(HEIGHT-PADDLE_HEIGHT)/2,PADDLE_WIDTH,PADDLE_HEIGHT);
+        paddle2 = new Paddle(WIDTH-PADDLE_WIDTH,(HEIGHT-PADDLE_HEIGHT)/2,PADDLE_WIDTH,PADDLE_HEIGHT);
     }
 
-    public void paint(Graphics g) {
-        image = createImage(getWidth(),getHeight());
-        graphics = image.getGraphics();
-        draw(graphics);
-        g.drawImage(image,0,0,this);
+    public void addObserver(GameModelObserver observer){
+        observers.add(observer);
+    }
+
+    public void removeObserver(GameModelObserver observer){
+        observers.remove(observer);
+    }
+
+    private void notifyObservers(){
+        for(GameModelObserver observer : observers){
+            observer.update();
+        }
     }
 
     public void checkCollision() {
@@ -141,20 +127,10 @@ class GameModel extends JPanel implements Runnable{
             if(delta >=1) {
                 move();
                 checkCollision();
-                repaint();
+                //repaint();
+                notifyObservers();
                 delta--;
             }
-        }
-    }
-
-    public void draw(Graphics g) {
-        try {
-            paddle1.draw(g);
-            paddle2.draw(g);
-            ball.draw(g);
-            score.draw(g);
-        } catch (Exception ex){
-            ex.printStackTrace();
         }
     }
 
@@ -166,6 +142,54 @@ class GameModel extends JPanel implements Runnable{
         } catch (Exception ex){
             ex.printStackTrace();
         }
+    }
+
+    public void setLeftPaddleDirection(Direction direction){
+        if (direction == Direction.DOWN){
+            paddle1.setYDirection(-10);
+        } else if (direction == Direction.UP){
+            paddle1.setYDirection(10);
+        } else {
+            paddle1.setYDirection(0);
+        }
+    }
+
+    public void setRightPaddleDirection(Direction direction){
+        if (direction == Direction.DOWN){
+            paddle2.setYDirection(-10);
+        } else if (direction == Direction.UP){
+            paddle2.setYDirection(10);
+        } else {
+            paddle2.setYDirection(0);
+        }
+    }
+
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_W) {
+            setLeftPaddleDirection(Direction.DOWN);
+        }
+        if (e.getKeyCode() == KeyEvent.VK_S) {
+            setLeftPaddleDirection(Direction.UP);
+        }
+
+        if (e.getKeyCode() == KeyEvent.VK_UP) {
+            setRightPaddleDirection(Direction.DOWN);
+        }
+        if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+            setRightPaddleDirection(Direction.UP);
+        }
+    }
+
+    public void keyReleased(KeyEvent e) {
+
+        if (e.getKeyCode() == KeyEvent.VK_W || e.getKeyCode() == KeyEvent.VK_S) {
+            setLeftPaddleDirection(Direction.STOP);
+        }
+
+        if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN) {
+            setRightPaddleDirection(Direction.STOP);
+        }
+
     }
 
 }
